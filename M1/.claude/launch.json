@@ -1,11 +1,12 @@
-﻿{
+{
   "version": "0.0.1",
   "configurations": [
     {
       "name": "galaga8",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["serve", "-p", "7788", "."],
-      "port": 7788
+      "runtimeArgs": ["next", "dev", "--port", "$PORT"],
+      "port": 7788,
+      "autoPort": true
     }
   ]
 }
