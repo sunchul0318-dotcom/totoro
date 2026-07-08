@@ -2,15 +2,24 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>GALAGA 8 CHRONICLES</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:#000;display:flex;justify-content:center;align-items:center;height:100vh;overflow:hidden;font-family:monospace}
 canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
+#ctrl{position:fixed;bottom:0;left:0;right:0;height:110px;display:none;justify-content:space-between;align-items:center;padding:0 24px;z-index:10}
+.ctrl-btn{width:90px;height:90px;border-radius:50%;background:rgba(0,200,255,.12);border:2px solid rgba(0,200,255,.35);display:flex;align-items:center;justify-content:center;font-family:monospace;font-size:30px;color:rgba(0,200,255,.65);user-select:none;-webkit-user-select:none;touch-action:manipulation}
+#ctrl-f{background:rgba(255,60,60,.12);border-color:rgba(255,80,80,.35);color:rgba(255,80,80,.8);font-size:13px;font-weight:bold;letter-spacing:1px}
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
+<div id="ctrl">
+  <div id="ctrl-l" class="ctrl-btn">◀</div>
+  <div id="ctrl-f" class="ctrl-btn">FIRE</div>
+  <div id="ctrl-r" class="ctrl-btn">▶</div>
+</div>
 <script>
 'use strict';
 // ═══════════════════════════════════════════════════════
@@ -20,8 +29,11 @@ const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
 const W = 480, H = 640;
 canvas.width = W; canvas.height = H;
+const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+const CTRL_H = 110;
 function resize(){
-  const s=Math.min(window.innerWidth/W,window.innerHeight/H);
+  const avail = window.innerHeight - (isMobile ? CTRL_H : 0);
+  const s=Math.min(window.innerWidth/W,avail/H);
   canvas.style.width=W*s+'px'; canvas.style.height=H*s+'px';
 }
 window.addEventListener('resize',resize); resize();
@@ -106,6 +118,24 @@ window.addEventListener('keydown',e=>{
   if(AC.state==='suspended') AC.resume();
 });
 window.addEventListener('keyup',e=>{ K[e.code]=false; });
+
+// 모바일 터치 컨트롤
+if(isMobile){
+  document.getElementById('ctrl').style.display='flex';
+  function addTouch(id,key){
+    const el=document.getElementById(id);
+    el.addEventListener('touchstart',e=>{
+      e.preventDefault();K[key]=true;anyKeyPressed=true;
+      if(AC.state==='suspended')AC.resume();
+    },{passive:false});
+    const off=e=>{e.preventDefault();K[key]=false;};
+    el.addEventListener('touchend',off,{passive:false});
+    el.addEventListener('touchcancel',off,{passive:false});
+  }
+  addTouch('ctrl-l','ArrowLeft');
+  addTouch('ctrl-r','ArrowRight');
+  addTouch('ctrl-f','Space');
+}
 
 // ═══════════════════════════════════════════════════════
 // MATH
@@ -977,10 +1007,10 @@ const G={
     const blink=Math.floor(this.titleTimer*2.2)%2===0;
     if(blink){
       ctx.fillStyle='#FFFFFF'; ctx.font='bold 15px monospace'; ctx.textAlign='center';
-      ctx.fillText('PRESS  SPACE  TO  START',W/2,432);
+      ctx.fillText(isMobile?'TAP  FIRE  TO  START':'PRESS  SPACE  TO  START',W/2,432);
     }
     ctx.fillStyle='#666688'; ctx.font='11px monospace';
-    ctx.fillText('← → / A D : MOVE    SPACE / Z : FIRE',W/2,466);
+    ctx.fillText(isMobile?'◀ ▶ : MOVE          FIRE : SHOOT':'← → / A D : MOVE    SPACE / Z : FIRE',W/2,466);
     ctx.fillStyle='#FFD700'; ctx.font='12px monospace';
     ctx.fillText(`HI-SCORE  ${String(this.hiScore).padStart(7,'0')}`,W/2,494);
     ctx.fillStyle='#444466'; ctx.font='10px monospace';
@@ -1060,7 +1090,7 @@ const G={
       if(this.goTimer>2.5){
         const bk=Math.floor(this.goTimer*2.5)%2===0;
         ctx.fillStyle=bk?'#FFF':'#666'; ctx.font='13px monospace';
-        ctx.fillText('PRESS SPACE TO CONTINUE',W/2,H/2+76);
+        ctx.fillText(isMobile?'TAP FIRE TO CONTINUE':'PRESS SPACE TO CONTINUE',W/2,H/2+76);
       }
     }
 

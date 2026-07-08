@@ -4,8 +4,8 @@
     {
       "name": "galaga8",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["next", "dev", "--port", "$PORT"],
-      "port": 7788,
+      "runtimeArgs": ["next", "dev"],
+      "port": 3000,
       "autoPort": true
     }
   ]
