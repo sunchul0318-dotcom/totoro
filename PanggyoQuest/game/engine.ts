@@ -654,7 +654,7 @@ export class GameEngine {
       reach,
       life: PLAYER.attackActive,
       maxLife: PLAYER.attackActive,
-      color: isFinisher ? "#ffcf4a" : "#ffffff",
+      color: isFinisher ? "#bff4ff" : "#7ce9ff",
     });
 
     // 히트 판정
@@ -2215,64 +2215,130 @@ export class GameEngine {
     ctx.restore();
   }
 
+  // 콘셉트 아트의 히어로: 갈색 스파이크 머리 · 베이지 후드 자켓 · 청바지 · WP 백팩 · 빛나는 파란 검
+  private drawHeroSword(ctx: CanvasRenderingContext2D, facing: number, attacking: boolean) {
+    const r = PLAYER.radius;
+    ctx.save();
+    ctx.rotate(facing);
+    const len = attacking ? 30 : 20;
+    const bx = r - 1;
+    // 발광
+    ctx.shadowColor = "#4ad8ff";
+    ctx.shadowBlur = attacking ? 18 : 9;
+    // 검신 (크리스탈 다이아 형태)
+    ctx.fillStyle = "#4ad8ff";
+    ctx.beginPath();
+    ctx.moveTo(bx, -3.6);
+    ctx.lineTo(bx + len - 7, -3);
+    ctx.lineTo(bx + len, 0);
+    ctx.lineTo(bx + len - 7, 3);
+    ctx.lineTo(bx, 3.6);
+    ctx.closePath();
+    ctx.fill();
+    // 코어 하이라이트
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = "#eafcff";
+    ctx.fillRect(bx, -1.1, len - 7, 2.2);
+    // 가드(금색) + 손잡이
+    ctx.fillStyle = "#ffcf4a";
+    ctx.fillRect(bx - 4, -4.5, 4, 9);
+    ctx.fillStyle = "#6e4a2e";
+    ctx.fillRect(bx - 9, -1.6, 5, 3.2);
+    ctx.restore();
+  }
+
   private drawPlayer(ctx: CanvasRenderingContext2D) {
     const p = this.player;
     const dodging = this.tMs < p.dodgingUntil;
     const invuln = this.tMs < p.iframeUntil;
+    const attacking = this.tMs < p.attackActiveUntil;
     const r = PLAYER.radius;
+    // 위쪽을 볼 땐 검을 몸 뒤에 그려 자연스럽게
+    const swordBehind = Math.sin(p.facing) < -0.25;
 
     this.drawShadow(ctx, p.x, p.y, r);
 
     ctx.save();
     ctx.translate(p.x, p.y);
-    // 피격 깜빡임
     if (invuln && !dodging && Math.floor(this.tMs / 70) % 2 === 0) {
-      ctx.globalAlpha = 0.45;
+      ctx.globalAlpha = 0.5;
     }
-    // 구르기 회전
     if (dodging) {
       const t = 1 - (p.dodgingUntil - this.tMs) / PLAYER.dodgeDuration;
       ctx.rotate(t * TAU * (p.dodgeDirX >= 0 ? 1 : -1));
     }
 
-    const bob = Math.sin(p.walkPhase) * 1.5;
+    const bob = Math.sin(p.walkPhase) * 1.4;
 
-    // 몸통 (양복 입은 직장인 용사)
-    ctx.fillStyle = "#2a3d7a";
-    this.roundRect(ctx, -9, -6 + bob, 18, 20, 4);
+    if (swordBehind) this.drawHeroSword(ctx, p.facing, attacking);
+
+    // 다리 (청바지) + 스니커즈
+    ctx.fillStyle = "#33517f";
+    ctx.fillRect(-7, 8 + bob, 6, 8);
+    ctx.fillRect(1, 8 + bob, 6, 8);
+    ctx.fillStyle = "#eef0f5";
+    ctx.fillRect(-8, 14 + bob, 7, 3);
+    ctx.fillRect(1, 14 + bob, 7, 3);
+
+    // 백팩 (어깨 뒤로 살짝) + 스트랩
+    ctx.fillStyle = "#6e4a2e";
+    ctx.fillRect(-8.5, -5 + bob, 3, 15);
+    ctx.fillRect(5.5, -5 + bob, 3, 15);
+
+    // 몸통 (베이지 후드 자켓)
+    ctx.fillStyle = "#c9a06a";
+    this.roundRect(ctx, -10, -6 + bob, 20, 17, 5);
     ctx.fill();
-    // 넥타이
-    ctx.fillStyle = "#ffcf4a";
-    ctx.fillRect(-2, -4 + bob, 4, 12);
+    // 후드 칼라
+    ctx.fillStyle = "#a87f4c";
+    this.roundRect(ctx, -8, -8 + bob, 16, 5, 3);
+    ctx.fill();
+    // 흰 티셔츠 V
+    ctx.fillStyle = "#f2f2f5";
+    ctx.beginPath();
+    ctx.moveTo(-4, -5 + bob);
+    ctx.lineTo(0, 3 + bob);
+    ctx.lineTo(4, -5 + bob);
+    ctx.closePath();
+    ctx.fill();
+    // WP 뱃지 (가슴)
+    ctx.fillStyle = "#2a5cff";
+    this.roundRect(ctx, -3, 0 + bob, 6, 5, 1);
+    ctx.fill();
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 4px 'Courier New', monospace";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("W", 0, 2.6 + bob);
+
     // 머리
-    ctx.fillStyle = "#ffd9a8";
+    ctx.fillStyle = "#ffcf9e";
     ctx.beginPath();
     ctx.arc(0, -14 + bob, 8, 0, TAU);
     ctx.fill();
-    // 머리카락
-    ctx.fillStyle = "#20242e";
+    // 갈색 스파이크 머리카락
+    ctx.fillStyle = "#7a4a1e";
     ctx.beginPath();
-    ctx.arc(0, -16 + bob, 8, Math.PI, TAU);
+    ctx.arc(0, -15 + bob, 8, Math.PI, TAU);
     ctx.fill();
+    for (let i = -2; i <= 2; i++) {
+      const tipH = 21 + (2 - Math.abs(i)) * 2; // 가운데가 더 높은 프린지
+      ctx.beginPath();
+      ctx.moveTo(i * 3 - 2, -19 + bob);
+      ctx.lineTo(i * 3 + 2, -tipH + bob); // 살짝 오른쪽으로 쓸어올림
+      ctx.lineTo(i * 3 + 3, -19 + bob);
+      ctx.closePath();
+      ctx.fill();
+    }
     ctx.fillRect(-8, -16 + bob, 16, 3);
-    // 눈 (방향 표시)
+    // 눈 (방향 표시, 결의에 찬 표정)
     ctx.fillStyle = "#20242e";
     const ex = Math.cos(p.facing) * 2.2;
-    ctx.fillRect(-4 + ex, -15 + bob, 2, 2);
-    ctx.fillRect(2 + ex, -15 + bob, 2, 2);
+    ctx.fillRect(-4 + ex, -15 + bob, 2.4, 2.4);
+    ctx.fillRect(2 + ex, -15 + bob, 2.4, 2.4);
 
-    ctx.restore();
+    if (!swordBehind) this.drawHeroSword(ctx, p.facing, attacking);
 
-    // 검(공격 시 강조), 항상 방향 표시용 작은 검
-    const attacking = this.tMs < p.attackActiveUntil;
-    ctx.save();
-    ctx.translate(p.x, p.y);
-    ctx.rotate(p.facing);
-    ctx.fillStyle = attacking ? "#ffffff" : "#cfd6e6";
-    const swordLen = attacking ? 26 : 16;
-    ctx.fillRect(r - 2, -2.5, swordLen, 5);
-    ctx.fillStyle = "#ffcf4a";
-    ctx.fillRect(r - 5, -4, 4, 8); // 손잡이 가드
     ctx.restore();
 
     // 버프 오라
@@ -2288,6 +2354,37 @@ export class GameEngine {
     }
   }
 
+  // 화난 눈 + 눈썹 (몬스터 공용 표정)
+  private angryEyes(
+    ctx: CanvasRenderingContext2D,
+    y: number,
+    spread: number,
+    size: number,
+    out: string,
+    sclera: string
+  ) {
+    ctx.fillStyle = sclera;
+    ctx.beginPath();
+    ctx.arc(-spread, y, size, 0, TAU);
+    ctx.arc(spread, y, size, 0, TAU);
+    ctx.fill();
+    ctx.fillStyle = out;
+    ctx.beginPath();
+    ctx.arc(-spread, y + size * 0.25, size * 0.55, 0, TAU);
+    ctx.arc(spread, y + size * 0.25, size * 0.55, 0, TAU);
+    ctx.fill();
+    ctx.strokeStyle = out;
+    ctx.lineWidth = Math.max(2, size * 0.55);
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(-spread - size, y - size * 1.35);
+    ctx.lineTo(-spread + size, y - size * 0.3);
+    ctx.moveTo(spread + size, y - size * 1.35);
+    ctx.lineTo(spread - size, y - size * 0.3);
+    ctx.stroke();
+    ctx.lineCap = "butt";
+  }
+
   private drawEnemy(ctx: CanvasRenderingContext2D, e: Enemy) {
     const flash = this.tMs < e.flashUntil;
     const scale = lerp(0.3, 1, e.spawnAnim);
@@ -2299,76 +2396,20 @@ export class GameEngine {
     ctx.save();
     ctx.translate(e.x, e.y + bobY);
     ctx.scale(scale, scale);
-
-    // 신호등 색 상태
-    let bodyColor = e.def.color;
-    if (e.kind === "signal") bodyColor = e.st === "red" ? "#e8544f" : "#3fbf8f";
-
-    // 몸통
-    ctx.fillStyle = flash ? "#ffffff" : bodyColor;
     if (e.kind === "boss") {
+      ctx.fillStyle = flash ? "#ffffff" : e.def.color;
       this.drawBoss(ctx, e, flash);
-    } else if (e.kind === "signal") {
-      // 신호등 박스
-      ctx.fillStyle = flash ? "#ffffff" : "#20242e";
-      this.roundRect(ctx, -r * 0.6, -r, r * 1.2, r * 2, 5);
-      ctx.fill();
-      // 등
-      ctx.fillStyle = e.st === "red" ? "#ff4b4b" : "#3a3a3a";
-      ctx.beginPath();
-      ctx.arc(0, -r * 0.5, r * 0.34, 0, TAU);
-      ctx.fill();
-      ctx.fillStyle = e.st === "green" ? "#4bff8f" : "#3a3a3a";
-      ctx.beginPath();
-      ctx.arc(0, r * 0.5, r * 0.34, 0, TAU);
-      ctx.fill();
     } else {
-      // 기본 둥근 몸체
-      ctx.fillStyle = flash ? "#ffffff" : bodyColor;
-      ctx.beginPath();
-      ctx.arc(0, 0, r, 0, TAU);
-      ctx.fill();
-      // 악센트 테두리
-      ctx.strokeStyle = flash ? "#ffffff" : e.def.accent;
-      ctx.lineWidth = 2;
-      ctx.stroke();
-
-      // 킥보드 예고 강조
-      if (e.kind === "kickboard" && e.st === "telegraph" && Math.floor(this.tMs / 80) % 2 === 0) {
-        ctx.strokeStyle = "#ffffff";
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.arc(0, 0, r + 4, 0, TAU);
-        ctx.stroke();
-      }
-      // 눈
-      ctx.fillStyle = "#20242e";
-      ctx.beginPath();
-      ctx.arc(-r * 0.32, -r * 0.15, r * 0.16, 0, TAU);
-      ctx.arc(r * 0.32, -r * 0.15, r * 0.16, 0, TAU);
-      ctx.fill();
+      this.drawEnemyBody(ctx, e, flash);
     }
-
     ctx.restore();
-
-    // 이모지 아이콘 (캐릭터성 부여) — 흔들림 좌표계 유지
-    if (e.kind !== "boss" && e.kind !== "signal") {
-      const glyph = this.enemyGlyph(e.kind);
-      ctx.save();
-      ctx.font = `${Math.round(r * 1.1 * scale)}px serif`;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.globalAlpha = 0.95;
-      ctx.fillText(glyph, e.x, e.y + bobY - 1);
-      ctx.restore();
-    }
 
     // HP 바 (미니, 보스는 HUD)
     if (e.kind !== "boss" && e.hp < e.maxHp) {
       const w = r * 2;
       const hx = e.x - r;
-      const hy = e.y - r - 10 + bobY;
-      ctx.fillStyle = "rgba(0,0,0,0.6)";
+      const hy = e.y - r - 12 + bobY;
+      ctx.fillStyle = "rgba(0,0,0,0.55)";
       ctx.fillRect(hx - 1, hy - 1, w + 2, 5);
       ctx.fillStyle = "#e8544f";
       ctx.fillRect(hx, hy, w, 3);
@@ -2377,26 +2418,556 @@ export class GameEngine {
     }
   }
 
-  private enemyGlyph(kind: EnemyKind): string {
-    switch (kind) {
-      case "gate":
-        return "💳";
-      case "crowd":
-        return "🚶";
-      case "lost":
-        return "❓";
-      case "escalator":
-        return "🔃";
-      case "kickboard":
-        return "🛴";
-      case "notification":
-        return "🔔";
-      case "queue":
-        return "☕";
-      case "badge":
-        return "🪪";
-      default:
-        return "";
+  // 톱니바퀴 (에스컬레이터/신호등 기계 파츠)
+  private gear(
+    ctx: CanvasRenderingContext2D,
+    cx: number,
+    cy: number,
+    rad: number,
+    col: string,
+    out: string,
+    spin: number
+  ) {
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(spin);
+    ctx.fillStyle = col;
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * TAU;
+      ctx.save();
+      ctx.translate(Math.cos(a) * rad, Math.sin(a) * rad);
+      ctx.rotate(a);
+      ctx.fillRect(-rad * 0.2, -rad * 0.2, rad * 0.4, rad * 0.5);
+      ctx.restore();
+    }
+    ctx.beginPath();
+    ctx.arc(0, 0, rad, 0, TAU);
+    ctx.fill();
+    ctx.fillStyle = out;
+    ctx.beginPath();
+    ctx.arc(0, 0, rad * 0.34, 0, TAU);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // 몬스터별 손그림 스프라이트 (origin = 몸 중심, 이미 scale 적용됨)
+  // 몬스터 도감 아트를 참고해 실루엣·표정·기계 디테일을 살렸다.
+  private drawEnemyBody(ctx: CanvasRenderingContext2D, e: Enemy, flash: boolean) {
+    const r = e.radius;
+    const C = (c: string) => (flash ? "#ffffff" : c);
+    const OUT = flash ? "#ffffff" : "#17101f";
+    const white = C("#ffffff");
+    const t = this.tMs;
+    const outline = (lw = 2.5) => {
+      ctx.strokeStyle = OUT;
+      ctx.lineWidth = lw;
+      ctx.stroke();
+    };
+
+    switch (e.kind) {
+      case "gate": {
+        // 잔액부족 게이트 — 3D 빨간 카드 단말기 + 성난 얼굴 + 뒤의 군중
+        // 뒤 군중(막아선 무리)
+        ctx.fillStyle = C("#484d5c");
+        for (const sxn of [-1, 1]) {
+          ctx.beginPath();
+          ctx.arc(sxn * r * 0.95, -r * 0.02, r * 0.3, 0, TAU);
+          ctx.fill();
+        }
+        ctx.strokeStyle = C("#484d5c");
+        ctx.lineWidth = r * 0.16;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(-r * 0.72, r * 0.15);
+        ctx.lineTo(-r * 1.2, -r * 0.05);
+        ctx.moveTo(r * 0.72, r * 0.15);
+        ctx.lineTo(r * 1.2, -r * 0.05);
+        ctx.stroke();
+        ctx.lineCap = "butt";
+        // 다리
+        ctx.fillStyle = OUT;
+        ctx.fillRect(-r * 0.4, r * 0.62, r * 0.22, r * 0.42);
+        ctx.fillRect(r * 0.18, r * 0.62, r * 0.22, r * 0.42);
+        // 큐브: 윗면(아이소메트릭)
+        ctx.fillStyle = C("#ff8f84");
+        ctx.beginPath();
+        ctx.moveTo(-r * 0.7, -r * 0.5);
+        ctx.lineTo(-r * 0.5, -r * 0.78);
+        ctx.lineTo(r * 0.9, -r * 0.78);
+        ctx.lineTo(r * 0.7, -r * 0.5);
+        ctx.closePath();
+        ctx.fill();
+        outline(2);
+        // 큐브: 오른쪽 면
+        ctx.fillStyle = C("#c23b38");
+        ctx.beginPath();
+        ctx.moveTo(r * 0.7, -r * 0.5);
+        ctx.lineTo(r * 0.9, -r * 0.78);
+        ctx.lineTo(r * 0.9, r * 0.45);
+        ctx.lineTo(r * 0.7, r * 0.6);
+        ctx.closePath();
+        ctx.fill();
+        outline(2);
+        // 큐브: 앞면
+        ctx.fillStyle = C("#e8544f");
+        this.roundRect(ctx, -r * 0.7, -r * 0.5, r * 1.4, r * 1.15, 4);
+        ctx.fill();
+        outline();
+        // 눈
+        ctx.fillStyle = white;
+        ctx.beginPath();
+        ctx.arc(-r * 0.3, -r * 0.1, r * 0.22, 0, TAU);
+        ctx.arc(r * 0.3, -r * 0.1, r * 0.22, 0, TAU);
+        ctx.fill();
+        ctx.fillStyle = OUT;
+        ctx.beginPath();
+        ctx.arc(-r * 0.26, -r * 0.04, r * 0.1, 0, TAU);
+        ctx.arc(r * 0.34, -r * 0.04, r * 0.1, 0, TAU);
+        ctx.fill();
+        // 성난 주황 눈썹
+        ctx.strokeStyle = C("#ff8a3d");
+        ctx.lineWidth = r * 0.15;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(-r * 0.5, -r * 0.4);
+        ctx.lineTo(-r * 0.12, -r * 0.22);
+        ctx.moveTo(r * 0.5, -r * 0.4);
+        ctx.lineTo(r * 0.12, -r * 0.22);
+        ctx.stroke();
+        ctx.lineCap = "butt";
+        // 카드 슬롯 + 카드
+        ctx.fillStyle = OUT;
+        this.roundRect(ctx, -r * 0.44, r * 0.24, r * 0.88, r * 0.16, 2);
+        ctx.fill();
+        ctx.fillStyle = C("#ffcf4a");
+        ctx.fillRect(-r * 0.3, r * 0.34, r * 0.6, r * 0.3);
+        ctx.fillStyle = C("#c99a2e");
+        ctx.fillRect(-r * 0.3, r * 0.42, r * 0.6, r * 0.07);
+        break;
+      }
+      case "crowd": {
+        // 밀치는 인파 — 겹친 사람 + 미는 팔
+        ctx.fillStyle = C("#5560c8");
+        ctx.beginPath();
+        ctx.arc(-r * 0.55, -r * 0.05, r * 0.5, 0, TAU);
+        ctx.arc(r * 0.55, -r * 0.05, r * 0.5, 0, TAU);
+        ctx.fill();
+        ctx.strokeStyle = OUT;
+        ctx.lineWidth = r * 0.2;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(-r * 0.35, r * 0.15);
+        ctx.lineTo(-r * 0.95, -r * 0.1);
+        ctx.moveTo(r * 0.35, r * 0.15);
+        ctx.lineTo(r * 0.95, -r * 0.1);
+        ctx.stroke();
+        ctx.lineCap = "butt";
+        ctx.fillStyle = C("#7c86ff");
+        this.roundRect(ctx, -r * 0.6, -r * 0.15, r * 1.2, r * 1.0, r * 0.5);
+        ctx.fill();
+        outline();
+        ctx.beginPath();
+        ctx.arc(0, -r * 0.5, r * 0.5, 0, TAU);
+        ctx.fillStyle = C("#7c86ff");
+        ctx.fill();
+        outline();
+        this.angryEyes(ctx, -r * 0.52, r * 0.19, r * 0.14, OUT, white);
+        break;
+      }
+      case "lost": {
+        // 길잃은 환승객 — 초록 후드 + 백팩 + 헤매는 눈 + ?
+        // 백팩
+        ctx.fillStyle = C("#2f7d5a");
+        this.roundRect(ctx, -r * 0.5, -r * 0.1, r * 1.0, r * 0.95, r * 0.28);
+        ctx.fill();
+        outline(2);
+        // 몸(후드)
+        ctx.fillStyle = C("#3fbf8f");
+        this.roundRect(ctx, -r * 0.55, 0, r * 1.1, r * 0.82, r * 0.4);
+        ctx.fill();
+        outline();
+        // 백팩 끈
+        ctx.strokeStyle = C("#2f7d5a");
+        ctx.lineWidth = r * 0.1;
+        ctx.beginPath();
+        ctx.moveTo(-r * 0.24, 0);
+        ctx.lineTo(-r * 0.2, r * 0.55);
+        ctx.moveTo(r * 0.24, 0);
+        ctx.lineTo(r * 0.2, r * 0.55);
+        ctx.stroke();
+        // 머리
+        ctx.fillStyle = C("#ffcf9e");
+        ctx.beginPath();
+        ctx.arc(0, -r * 0.45, r * 0.5, 0, TAU);
+        ctx.fill();
+        outline();
+        // 머리카락
+        ctx.fillStyle = C("#5a3a1e");
+        ctx.beginPath();
+        ctx.arc(0, -r * 0.58, r * 0.5, Math.PI, TAU);
+        ctx.fill();
+        // 헤매는 눈 (크기 다르게)
+        ctx.fillStyle = white;
+        ctx.beginPath();
+        ctx.arc(-r * 0.2, -r * 0.42, r * 0.17, 0, TAU);
+        ctx.arc(r * 0.22, -r * 0.42, r * 0.12, 0, TAU);
+        ctx.fill();
+        ctx.fillStyle = OUT;
+        ctx.beginPath();
+        ctx.arc(-r * 0.24, -r * 0.46, r * 0.08, 0, TAU);
+        ctx.arc(r * 0.24, -r * 0.4, r * 0.05, 0, TAU);
+        ctx.fill();
+        // ? 말풍선
+        ctx.fillStyle = white;
+        this.roundRect(ctx, r * 0.35, -r * 1.5, r * 0.75, r * 0.62, 3);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(r * 0.5, -r * 0.9);
+        ctx.lineTo(r * 0.62, -r * 0.72);
+        ctx.lineTo(r * 0.72, -r * 0.9);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = OUT;
+        ctx.font = `bold ${Math.round(r * 0.5)}px 'Courier New', monospace`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("?", r * 0.72, -r * 1.19);
+        break;
+      }
+      case "escalator": {
+        // 역주행 에스컬레이터 — 기어 + 계단 + 흐르는 빨강 화살표 + 위의 눈
+        // 기어(양옆 하단)
+        this.gear(ctx, -r * 0.6, r * 0.55, r * 0.28, C("#6b7385"), OUT, t / 500);
+        this.gear(ctx, r * 0.6, r * 0.55, r * 0.28, C("#6b7385"), OUT, -t / 500);
+        // 본체
+        ctx.fillStyle = C("#8a92a4");
+        this.roundRect(ctx, -r * 0.72, -r * 0.5, r * 1.44, r * 1.25, 3);
+        ctx.fill();
+        outline();
+        // 상단 레일(밝게)
+        ctx.fillStyle = C("#b4bcca");
+        this.roundRect(ctx, -r * 0.72, -r * 0.5, r * 1.44, r * 0.26, 3);
+        ctx.fill();
+        // 계단 라인
+        ctx.strokeStyle = OUT;
+        ctx.lineWidth = 1.5;
+        for (let i = 0; i < 4; i++) {
+          const y = -r * 0.2 + i * r * 0.28;
+          ctx.beginPath();
+          ctx.moveTo(-r * 0.72, y);
+          ctx.lineTo(r * 0.72, y);
+          ctx.stroke();
+        }
+        // 흐르는 빨강 화살표(위로 = 역주행)
+        const flow = ((t / 240) % 1) * r * 0.36;
+        ctx.fillStyle = C("#ff4b4b");
+        for (const oy of [r * 0.5, r * 0.14, -r * 0.22]) {
+          const y = oy - flow;
+          ctx.beginPath();
+          ctx.moveTo(0, y - r * 0.16);
+          ctx.lineTo(r * 0.22, y + r * 0.1);
+          ctx.lineTo(-r * 0.22, y + r * 0.1);
+          ctx.closePath();
+          ctx.fill();
+        }
+        // 위의 눈(줄기 달린)
+        ctx.strokeStyle = OUT;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(-r * 0.28, -r * 0.5);
+        ctx.lineTo(-r * 0.28, -r * 0.8);
+        ctx.moveTo(r * 0.28, -r * 0.5);
+        ctx.lineTo(r * 0.28, -r * 0.8);
+        ctx.stroke();
+        ctx.fillStyle = white;
+        ctx.beginPath();
+        ctx.arc(-r * 0.28, -r * 0.92, r * 0.2, 0, TAU);
+        ctx.arc(r * 0.28, -r * 0.92, r * 0.2, 0, TAU);
+        ctx.fill();
+        outline(2);
+        ctx.fillStyle = OUT;
+        ctx.beginPath();
+        ctx.arc(-r * 0.24, -r * 0.88, r * 0.09, 0, TAU);
+        ctx.arc(r * 0.32, -r * 0.88, r * 0.09, 0, TAU);
+        ctx.fill();
+        break;
+      }
+      case "kickboard": {
+        // 무단질주 킥보드 — 제대로 된 스쿠터 + 성난 얼굴 + 먼지/속도선
+        const tel = e.st === "telegraph" && Math.floor(t / 80) % 2 === 0;
+        const dashing = e.st === "dash";
+        // 먼지(질주 시)
+        if (dashing) {
+          ctx.fillStyle = C("#c9c2b4");
+          for (let i = 0; i < 3; i++) {
+            ctx.globalAlpha = 0.5 - i * 0.13;
+            ctx.beginPath();
+            ctx.arc(-r * (0.9 + i * 0.4), r * 0.5, r * (0.24 - i * 0.05), 0, TAU);
+            ctx.fill();
+          }
+          ctx.globalAlpha = 1;
+        }
+        // 바퀴
+        ctx.fillStyle = OUT;
+        ctx.beginPath();
+        ctx.arc(-r * 0.7, r * 0.6, r * 0.32, 0, TAU);
+        ctx.arc(r * 0.7, r * 0.6, r * 0.32, 0, TAU);
+        ctx.fill();
+        ctx.fillStyle = C("#7a8090");
+        ctx.beginPath();
+        ctx.arc(-r * 0.7, r * 0.6, r * 0.12, 0, TAU);
+        ctx.arc(r * 0.7, r * 0.6, r * 0.12, 0, TAU);
+        ctx.fill();
+        // 데크
+        ctx.fillStyle = C("#ff8a3d");
+        this.roundRect(ctx, -r * 0.82, r * 0.28, r * 1.64, r * 0.28, 3);
+        ctx.fill();
+        outline(2);
+        // 스템 + 핸들바 T
+        ctx.strokeStyle = C("#3a3f4a");
+        ctx.lineWidth = r * 0.16;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(r * 0.7, r * 0.42);
+        ctx.lineTo(r * 0.62, -r * 0.75);
+        ctx.moveTo(r * 0.28, -r * 0.75);
+        ctx.lineTo(r * 0.98, -r * 0.75);
+        ctx.stroke();
+        ctx.lineCap = "butt";
+        // 성난 얼굴(데크 위)
+        this.angryEyes(ctx, -r * 0.02, r * 0.3, r * 0.15, OUT, white);
+        // 속도선
+        if (dashing) {
+          ctx.strokeStyle = C("#ffffff");
+          ctx.globalAlpha = 0.6;
+          ctx.lineWidth = 2;
+          for (const ly of [-r * 0.1, r * 0.15, r * 0.4]) {
+            ctx.beginPath();
+            ctx.moveTo(-r * 1.3, ly);
+            ctx.lineTo(-r * 0.85, ly);
+            ctx.stroke();
+          }
+          ctx.globalAlpha = 1;
+        }
+        if (tel) {
+          ctx.strokeStyle = "#ffffff";
+          ctx.lineWidth = 3;
+          this.roundRect(ctx, -r * 1.05, -r * 0.95, r * 2.1, r * 1.75, 6);
+          ctx.stroke();
+        }
+        break;
+      }
+      case "signal": {
+        // 변덕쟁이 신호등 — 3등 하우징 + 기어 받침 + 색 눈썹
+        const red = e.st === "red";
+        // 받침 기어
+        this.gear(ctx, -r * 0.32, r * 0.82, r * 0.24, C("#5a6070"), OUT, t / 600);
+        this.gear(ctx, r * 0.32, r * 0.82, r * 0.24, C("#5a6070"), OUT, -t / 600);
+        ctx.fillStyle = C("#3a3f4a");
+        ctx.fillRect(-r * 0.1, r * 0.55, r * 0.2, r * 0.4);
+        // 하우징
+        ctx.fillStyle = C("#20242e");
+        this.roundRect(ctx, -r * 0.5, -r * 1.05, r * 1.0, r * 1.7, 6);
+        ctx.fill();
+        outline();
+        // 램프 3개 (빨강/노랑/초록)
+        const lamp = (ly: number, on: boolean, onColor: string, offColor: string, glow: string) => {
+          ctx.save();
+          if (on) {
+            ctx.shadowColor = glow;
+            ctx.shadowBlur = 14;
+          }
+          ctx.fillStyle = on ? C(onColor) : C(offColor);
+          ctx.beginPath();
+          ctx.arc(0, ly, r * 0.26, 0, TAU);
+          ctx.fill();
+          ctx.restore();
+        };
+        lamp(-r * 0.62, red, "#ff4b4b", "#4a1818", "#ff3a3a");
+        lamp(-r * 0.05, false, "#ffd23a", "#4a4020", "#ffd23a");
+        lamp(r * 0.52, !red, "#4bff8f", "#153a24", "#4bff8f");
+        // 켜진 램프 위 색 눈썹
+        const ly = red ? -r * 0.62 : r * 0.52;
+        ctx.strokeStyle = red ? C("#ff5a3a") : C("#4bff8f");
+        ctx.lineWidth = Math.max(2, r * 0.12);
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(-r * 0.3, ly - r * 0.4);
+        ctx.lineTo(-r * 0.04, ly - r * 0.26);
+        ctx.moveTo(r * 0.3, ly - r * 0.4);
+        ctx.lineTo(r * 0.04, ly - r * 0.26);
+        ctx.stroke();
+        ctx.lineCap = "butt";
+        break;
+      }
+      case "notification": {
+        // 푸시 알림 — 빨간 종 + 좌우 링 모션선
+        const sway = Math.sin(t / 100 + e.bob) * 0.18;
+        // 링 모션선 (흔들리는 반대쪽에 잔상)
+        ctx.strokeStyle = C("#ffd23a");
+        ctx.lineWidth = 2;
+        ctx.globalAlpha = 0.7;
+        for (const s of [-1, 1]) {
+          ctx.beginPath();
+          ctx.arc(s * r * 1.05, 0, r * 0.5, -0.7, 0.7);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(s * r * 1.35, 0, r * 0.55, -0.6, 0.6);
+          ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+        ctx.rotate(sway);
+        ctx.fillStyle = C("#ff4b5c");
+        ctx.beginPath();
+        ctx.moveTo(-r * 0.72, r * 0.5);
+        ctx.quadraticCurveTo(-r * 0.72, -r * 0.55, 0, -r * 0.72);
+        ctx.quadraticCurveTo(r * 0.72, -r * 0.55, r * 0.72, r * 0.5);
+        ctx.closePath();
+        ctx.fill();
+        outline();
+        ctx.fillStyle = C("#d63b4b");
+        this.roundRect(ctx, -r * 0.82, r * 0.42, r * 1.64, r * 0.26, 3);
+        ctx.fill();
+        outline(2);
+        ctx.fillStyle = C("#ffcf4a");
+        ctx.beginPath();
+        ctx.arc(0, -r * 0.78, r * 0.15, 0, TAU);
+        ctx.fill();
+        ctx.fillStyle = C("#d63b4b");
+        ctx.beginPath();
+        ctx.arc(0, r * 0.72, r * 0.14, 0, TAU);
+        ctx.fill();
+        ctx.fillStyle = white;
+        ctx.font = `bold ${Math.round(r * 0.95)}px 'Courier New', monospace`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("!", 0, -r * 0.12);
+        break;
+      }
+      case "queue": {
+        // 끝없는 커피 대기줄 — 여러 컵 + 성난 중앙 컵 + 김 + 뒤의 대기줄
+        // 뒤 대기줄(회색 머리)
+        ctx.fillStyle = C("#484d5c");
+        for (let i = 0; i < 3; i++) {
+          ctx.beginPath();
+          ctx.arc(-r * 0.95 - i * r * 0.32, r * 0.1, r * 0.2, 0, TAU);
+          ctx.fill();
+        }
+        // 김
+        ctx.strokeStyle = C("#ffffff");
+        ctx.globalAlpha = 0.4;
+        ctx.lineWidth = 2;
+        for (const sx of [-r * 0.25, r * 0.05, r * 0.35]) {
+          ctx.beginPath();
+          ctx.moveTo(sx, -r * 0.7);
+          ctx.quadraticCurveTo(sx + r * 0.16, -r * 0.95, sx, -r * 1.2);
+          ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+        // 곁 컵(양옆, 조금 작게)
+        const sideCup = (cx: number, body: string) => {
+          ctx.fillStyle = C(body);
+          ctx.beginPath();
+          ctx.moveTo(cx - r * 0.32, -r * 0.35);
+          ctx.lineTo(cx + r * 0.32, -r * 0.35);
+          ctx.lineTo(cx + r * 0.26, r * 0.7);
+          ctx.lineTo(cx - r * 0.26, r * 0.7);
+          ctx.closePath();
+          ctx.fill();
+          outline(2);
+          ctx.fillStyle = C("#4a3018");
+          this.roundRect(ctx, cx - r * 0.38, -r * 0.5, r * 0.76, r * 0.2, 2);
+          ctx.fill();
+        };
+        sideCup(-r * 0.5, "#c98a52");
+        sideCup(r * 0.55, "#e0e0e6");
+        // 중앙 큰 컵
+        ctx.fillStyle = C("#ece0cf");
+        ctx.beginPath();
+        ctx.moveTo(-r * 0.5, -r * 0.55);
+        ctx.lineTo(r * 0.5, -r * 0.55);
+        ctx.lineTo(r * 0.42, r * 0.85);
+        ctx.lineTo(-r * 0.42, r * 0.85);
+        ctx.closePath();
+        ctx.fill();
+        outline();
+        // 뚜껑
+        ctx.fillStyle = C("#5a3a22");
+        this.roundRect(ctx, -r * 0.6, -r * 0.72, r * 1.2, r * 0.24, 3);
+        ctx.fill();
+        outline(2);
+        ctx.fillStyle = OUT;
+        this.roundRect(ctx, -r * 0.14, -r * 0.7, r * 0.28, r * 0.11, 2);
+        ctx.fill();
+        // 슬리브
+        ctx.fillStyle = C("#8a5a2b");
+        ctx.beginPath();
+        ctx.moveTo(-r * 0.48, -r * 0.1);
+        ctx.lineTo(r * 0.48, -r * 0.1);
+        ctx.lineTo(r * 0.44, r * 0.3);
+        ctx.lineTo(-r * 0.44, r * 0.3);
+        ctx.closePath();
+        ctx.fill();
+        outline(2);
+        this.angryEyes(ctx, r * 0.05, r * 0.24, r * 0.15, OUT, white);
+        break;
+      }
+      case "badge": {
+        // 출입증 인식오류 — 랜야드 + 카드(사진/ERR/바코드) + 리더기
+        // 랜야드 끈
+        ctx.strokeStyle = C("#2a6cff");
+        ctx.lineWidth = r * 0.1;
+        ctx.beginPath();
+        ctx.moveTo(-r * 0.32, -r * 0.6);
+        ctx.lineTo(-r * 0.06, -r * 1.35);
+        ctx.lineTo(r * 0.06, -r * 1.35);
+        ctx.lineTo(r * 0.32, -r * 0.6);
+        ctx.stroke();
+        // 클립
+        ctx.fillStyle = C("#8a90a0");
+        ctx.fillRect(-r * 0.08, -r * 0.72, r * 0.16, r * 0.18);
+        // 카드
+        ctx.fillStyle = C("#2a5cff");
+        this.roundRect(ctx, -r * 0.65, -r * 0.6, r * 1.3, r * 1.2, 5);
+        ctx.fill();
+        outline();
+        // 헤더바
+        ctx.fillStyle = C("#1a3a9e");
+        this.roundRect(ctx, -r * 0.65, -r * 0.6, r * 1.3, r * 0.26, 5);
+        ctx.fill();
+        // 사진(작은 얼굴)
+        ctx.fillStyle = C("#cfe0ff");
+        this.roundRect(ctx, -r * 0.5, -r * 0.24, r * 0.5, r * 0.56, 2);
+        ctx.fill();
+        ctx.fillStyle = C("#7bd0a0");
+        ctx.beginPath();
+        ctx.arc(-r * 0.25, r * 0.06, r * 0.16, 0, TAU);
+        ctx.fill();
+        ctx.fillStyle = OUT;
+        ctx.fillRect(-r * 0.31, r * 0.0, r * 0.05, r * 0.05);
+        ctx.fillRect(-r * 0.19, r * 0.0, r * 0.05, r * 0.05);
+        // ERR!
+        const errBlink = Math.floor(t / 400) % 2 === 0;
+        ctx.fillStyle = errBlink ? C("#ff5d5d") : C("#7a2a2a");
+        ctx.font = `bold ${Math.round(r * 0.3)}px 'Courier New', monospace`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("ERR!", r * 0.28, -r * 0.05);
+        // 바코드
+        ctx.fillStyle = C("#0e1a3a");
+        for (let i = 0; i < 7; i++) {
+          const bw = i % 2 ? r * 0.04 : r * 0.07;
+          ctx.fillRect(r * 0.05 + i * r * 0.08, r * 0.22, bw, r * 0.22);
+        }
+        // 리더기(카드가 꽂힌 받침)
+        ctx.fillStyle = C("#2a2f3a");
+        this.roundRect(ctx, -r * 0.42, r * 0.66, r * 0.84, r * 0.5, 3);
+        ctx.fill();
+        outline(2);
+        ctx.fillStyle = OUT;
+        ctx.fillRect(-r * 0.26, r * 0.74, r * 0.52, r * 0.08);
+        break;
+      }
     }
   }
 
@@ -2500,22 +3071,34 @@ export class GameEngine {
     const t = s.life / s.maxLife;
     ctx.save();
     ctx.translate(s.x, s.y);
-    ctx.globalAlpha = clamp(t, 0, 1) * 0.8;
+    ctx.shadowColor = s.color;
+    ctx.shadowBlur = 14;
     if (s.arc >= TAU - 0.01) {
       // 스킬 원형 충격파
       const rr = lerp(s.reach * 0.3, s.reach, 1 - t);
+      ctx.globalAlpha = clamp(t, 0, 1) * 0.85;
       ctx.strokeStyle = s.color;
       ctx.lineWidth = 6 * t + 2;
       ctx.beginPath();
       ctx.arc(0, 0, rr, 0, TAU);
       ctx.stroke();
     } else {
-      // 부채꼴 슬래시
+      // 초승달 모양 검기 (안쪽을 파내어 곡선 궤적으로)
       ctx.rotate(s.angle);
+      const inner = s.reach * (0.4 + (1 - t) * 0.25);
+      ctx.globalAlpha = clamp(t, 0, 1) * 0.85;
       ctx.fillStyle = s.color;
       ctx.beginPath();
-      ctx.moveTo(0, 0);
       ctx.arc(0, 0, s.reach, -s.arc / 2, s.arc / 2);
+      ctx.arc(0, 0, inner, s.arc / 2, -s.arc / 2, true);
+      ctx.closePath();
+      ctx.fill();
+      // 밝은 앞날
+      ctx.globalAlpha = clamp(t, 0, 1);
+      ctx.fillStyle = "#f5ffff";
+      ctx.beginPath();
+      ctx.arc(0, 0, s.reach, -s.arc / 2, s.arc / 2);
+      ctx.arc(0, 0, s.reach - 3, s.arc / 2, -s.arc / 2, true);
       ctx.closePath();
       ctx.fill();
     }
