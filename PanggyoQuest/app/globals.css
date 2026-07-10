@@ -1,0 +1,105 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --dq-bg: #05060f;
+  --dq-panel: #0c0f24;
+  --dq-ink: #f4f4ff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: #000;
+  color: var(--dq-ink);
+  font-family: "Courier New", "D2Coding", "NanumGothicCoding", monospace;
+  -webkit-font-smoothing: none;
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* iframe 임베드: 루트가 항상 부모 전체를 채우고 스크롤이 생기지 않게 */
+:root {
+  width: 100%;
+  height: 100%;
+}
+
+canvas {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  display: block;
+}
+
+/* Classic Dragon Quest style command / message window */
+.dq-window {
+  background: #05060f;
+  border: 4px solid #f4f4ff;
+  border-radius: 10px;
+  box-shadow:
+    0 0 0 4px #05060f,
+    0 0 0 8px #4a63c8,
+    0 6px 0 8px rgba(0, 0, 0, 0.5);
+  position: relative;
+}
+
+.dq-btn {
+  border: 3px solid #f4f4ff;
+  background: #0c0f24;
+  color: #f4f4ff;
+  padding: 10px 18px;
+  border-radius: 8px;
+  letter-spacing: 1px;
+  font-weight: 700;
+  transition: transform 0.06s ease, background 0.12s ease;
+  box-shadow: 0 4px 0 #000;
+}
+.dq-btn:hover {
+  background: #22357a;
+}
+.dq-btn:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 #000;
+}
+
+/* CRT scanline overlay */
+.crt::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0) 0px,
+    rgba(0, 0, 0, 0) 2px,
+    rgba(0, 0, 0, 0.18) 3px,
+    rgba(0, 0, 0, 0.18) 3px
+  );
+  mix-blend-mode: multiply;
+  z-index: 40;
+  border-radius: 6px;
+}
+
+.text-shadow-hard {
+  text-shadow: 2px 2px 0 #000, -2px 2px 0 #000, 2px -2px 0 #000, -2px -2px 0 #000;
+}
+
+.pixel-cursor {
+  animation: blink 0.9s steps(1) infinite;
+}
+
+::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
