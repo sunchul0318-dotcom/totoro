@@ -2,6 +2,8 @@
 /.next/
 /out/
 /build
+/.vercel
+/.wrangler
 *.tsbuildinfo
 next-env.d.ts
 .DS_Store

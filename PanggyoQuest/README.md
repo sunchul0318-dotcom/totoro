@@ -15,11 +15,25 @@ npm run dev
 # http://localhost:3000 접속
 ```
 
-정적 빌드(정적 호스팅/Cloudflare Pages 등 배포용):
+프로덕션 빌드:
 
 ```bash
-npm run build   # out/ 폴더에 정적 파일 생성 (output: 'export')
+npm run build
 ```
+
+### Cloudflare Pages 배포
+
+`@cloudflare/next-on-pages` 파이프라인을 사용한다. Cloudflare Pages 프로젝트 설정:
+
+- **빌드 명령어**: `npx @cloudflare/next-on-pages@1`
+- **빌드 출력 디렉터리**: `.vercel/output/static`
+- **호환성 플래그**: `nodejs_compat`
+
+리포지토리에 이 값들을 고정해 두었으므로 대시보드 변경 없이 동작한다:
+
+- [`.npmrc`](.npmrc) — `legacy-peer-deps=true` (next-on-pages 설치 시 peer 의존성 충돌 방지)
+- [`wrangler.toml`](wrangler.toml) — `pages_build_output_dir` + `nodejs_compat`
+- `next.config.mjs` — next-on-pages 호환을 위해 `output: 'export'` 미사용
 
 권장 환경: 최신 Chrome/Edge/Safari. 데스크톱 키보드 및 모바일 터치 모두 지원.
 

@@ -1,0 +1,6 @@
+name = "pangyo-quest"
+compatibility_date = "2024-11-01"
+# next-on-pages 로 빌드된 워커는 Node.js 호환 런타임이 필요하다
+compatibility_flags = ["nodejs_compat"]
+# @cloudflare/next-on-pages 의 산출물 경로 (Cloudflare Pages 가 이 폴더를 배포)
+pages_build_output_dir = ".vercel/output/static"
